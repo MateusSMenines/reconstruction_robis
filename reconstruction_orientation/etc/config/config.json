@@ -1,0 +1,11 @@
+{
+    "broker_uri": "amqp://10.10.0.68:30000",
+    "detection":{
+        "id":1,
+        "detection_type":"Robis" 
+        },      
+    "variables":{
+        "alpha":0.3,
+        "norm_theshrold": 0.015
+        }
+}

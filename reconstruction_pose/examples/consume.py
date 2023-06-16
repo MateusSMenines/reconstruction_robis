@@ -65,14 +65,14 @@ class DetectionManager:
                             for objectannotation in objectannotations.objects:
                                 vertices = objectannotation.region.vertices
                                 vertices = np.array([[vertices[0].x, vertices[0].y], 
-                                                    [vertices[1].x, vertices[1].y], 
-                                                    [vertices[2].x, vertices[2].y], 
-                                                    [vertices[3].x, vertices[3].y]])   
+                                                     [vertices[1].x, vertices[1].y], 
+                                                     [vertices[2].x, vertices[2].y], 
+                                                     [vertices[3].x, vertices[3].y]])   
 
                             if vertices is not None:    
                                 frame = self.plot_boxes(vertices, frame)
 
-                    cv2.imshow("img {}".format(camera_id), cv2.resize(frame, (960,640)))
+                    cv2.imshow("img {}".format(camera_id), cv2.resize(frame, (600,400)))
                 
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
@@ -80,7 +80,7 @@ class DetectionManager:
               
 if __name__ == '__main__':
 
-    config_file = '../etc/config.json'
+    config_file = '../etc/config/config.json'
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-c','--camera', nargs='+',required=True)

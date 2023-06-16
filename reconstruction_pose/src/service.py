@@ -3,6 +3,7 @@ from detection.detect import RobisDetection
 from detection.subscription_manager import GetAvalibleCamera
 from PIL import Image as img
 import json
+import time
 
 from is_msgs.image_pb2 import ObjectAnnotations, ObjectAnnotation, BoundingPoly, Vertex
 from is_wire.core import Message, Channel, Logger
@@ -10,17 +11,17 @@ from is_wire.core import Message, Channel, Logger
 
 class Service():
 
-    def __init__(self,config_file):
-        self.config = json.load(open(config_file, 'r'))
-        self.broker_uri = self.config['broker_uri']
-        self.threshold = self.config['threshold']
-        self.channel = Channel(self.broker_uri)
-        self.getAvalibleCamera = GetAvalibleCamera(self.broker_uri)
-        self.camera_ids = self.getAvalibleCamera.run()
-        self.robis_detection = RobisDetection(self.threshold)
-        self.cameras = self.robis_detection.set_cameras(self.broker_uri,self.camera_ids)
+    def __init__(self,broker_uri):
+        self.channel = Channel(broker_uri)
+        getAvalibleCamera = GetAvalibleCamera(broker_uri)
+        camera_ids = getAvalibleCamera.run()
+        self.robis_detection = RobisDetection()
+        self.cameras = self.robis_detection.set_cameras(broker_uri,camera_ids)
 
+        #log_service.info(f"Available cameras for detection: {camera_ids}") 
+        time.sleep(0.3)
 
+    
     def publish(self, list_robis):
         Boundingpoly = BoundingPoly(vertices = [Vertex(x = list_robis[0][2], y = list_robis[0][3]), 
                                                 Vertex(x = list_robis[0][2], y = list_robis[0][5]), 
@@ -61,8 +62,11 @@ class Service():
 
 if __name__ == '__main__':
 
+    config_file = "../etc/config/config.json"
+    config = json.load(open(config_file, 'r'))
+    broker_uri = config['broker_uri']
+
     log_detector = Logger(name="Detector")
 
-    config_file = "../etc/config/config.json"
-    service = Service(config_file)
+    service = Service(broker_uri)
     service.run()

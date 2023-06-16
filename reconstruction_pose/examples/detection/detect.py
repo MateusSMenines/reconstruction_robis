@@ -5,7 +5,7 @@ from detection.cameraClient import CameraClient
 class RobisDetection():
     
     def __init__(self, threshold):
-        self.model = torch.hub.load('../etc/yolov5/', 'custom', path= "../etc/weight/weight.pt", source='local')
+        self.model = torch.hub.load('../etc/yolov5/', 'custom', path= "../etc/weight/best.pt", source='local')
         self.classes = self.model.names
         self.THRESHOLD = threshold
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'

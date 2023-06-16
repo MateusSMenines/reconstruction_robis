@@ -6,6 +6,6 @@
         },      
     "variables":{
         "alpha":0.3,
-        "norm_theshrold": 0.08
+        "norm_theshrold": 0.10
         }
 }

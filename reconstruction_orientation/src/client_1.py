@@ -5,8 +5,8 @@ import math
 
 
 # IS
-from is_wire.core import Channel, Subscription, Logger
-from is_msgs.common_pb2 import Pose
+from is_wire.core import Channel, Subscription, Logger, Message
+from is_msgs.common_pb2 import Pose, Orientation
 from streamChannel import StreamChannel
 
 
@@ -17,25 +17,34 @@ class PoseReconstructor:
         self.detection_id = self.config['detection']['id']
         self.detection_type = self.config['detection']['detection_type']
         self.alpha = self.config['variables']['alpha']
-        self.norm_threshold = self.config['variables']['norm_theshrold']
+        #self.norm_threshold = self.config['variables']['norm_theshrold']
+        self.norm_threshold = 0.01
         self.channel = StreamChannel(self.broker_uri)
         self.subscription = Subscription(self.channel)
         self.subscription.subscribe(topic=f"reconstruction.{self.detection_id}.{self.detection_type}")
+        
         self.values = None
+        self.data = []
         self.pose_list = []
-        self.value_list = []
-        self.window_size = 3
-        self.values_array = np.zeros((1,2))
-        self.deg = "Not found"
+        self.list = []
+        self.deg = 0.0
+        self.WINDOW_SIZE = 5
 
 
-    def exponential_smoothing(self, x, y):
+    def exponential_smoothing(self, Y, S):
+        self.data.append(Y)
+        if len(self.data) > self.WINDOW_SIZE:
+            self.data.pop(0)
+        
+        if len(self.data) <= self.WINDOW_SIZE:
+            data = np.array(self.data)
+            alpha = self.alpha
+            mean = np.array([np.mean(data[:,0]),np.mean(data[:,1])])
 
-        alpha = self.alpha
-        output = alpha * x + (1 - alpha) * y
+            output = alpha * mean + (1 - alpha) * np.array(S)
 
         return output
-
+    
 
     def process_pose(self, pose):
         x_recontruction = math.trunc(pose.position.x*100)/100
@@ -50,20 +59,25 @@ class PoseReconstructor:
         norm = np.linalg.norm([y,x])
 
         if norm > self.norm_threshold:
-            vector = np.array([y,x])
+            vector = [y,x]
             if self.values is None:
                 self.values = vector
             else:
                 self.values = self.exponential_smoothing(vector, self.values)
                 rads = math.atan2(self.values[0],self.values[1])
-                self.deg = math.degrees(rads)
+                #self.deg = math.degrees(rads)
+                self.deg = rads
 
             self.pose_list = [self.pose_list[-1]]
         else:
             self.pose_list = [self.pose_list[0]]
         
-        log_detector.info(f"Angle reconstruction:{self.deg}")  
 
+        orientation = Orientation(yaw = self.deg)
+        message = Message(content = orientation)
+        self.channel.publish(message, topic = f"Robis.reconstruction.orientation.001")
+
+        log_detector.info(f"Angle reconstruction:{self.deg}")  
 
     def run(self):
         while True:
@@ -80,6 +94,6 @@ if __name__ == '__main__':
 
     log_detector = Logger(name="orientation")
 
-    config_file = 'config.json'
+    config_file = '../etc/config/config_1.json'
     reconstructor = PoseReconstructor(config_file)
     reconstructor.run()

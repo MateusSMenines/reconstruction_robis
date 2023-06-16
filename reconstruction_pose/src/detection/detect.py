@@ -4,10 +4,10 @@ from detection.cameraClient import CameraClient
 
 class RobisDetection():
     
-    def __init__(self, threshold):
+    def __init__(self):
         self.model = torch.hub.load('../etc/yolov5/', 'custom', path= "../etc/weight/weight.pt", source='local')
         self.classes = self.model.names
-        self.THRESHOLD = threshold
+        self.THRESHOLD = 0.75
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         print("\n\nDevice Used:",self.device)
 
@@ -16,6 +16,7 @@ class RobisDetection():
         self.model.to(self.device)
         results = self.model(frame)
         labels, cord = results.xyxyn[0][:, -1], results.xyxyn[0][:, :-1]
+        
 
         return labels, cord
 
